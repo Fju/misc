@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<title>LZ 78</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="../css/main.css" />
+	</head>
+	<body>
+		<h1>LZ-78</h1>
+		<p>Einfach einen beliebigen Text eingeben und die dazugehörige Tabelle wird automatisch generiert</p>
+		<div id="app">
+			<label>Texteingabe:</label><br>
+			<textarea maxlength="100" v-model="input"></textarea>
+			<p></p>	
+			<table>
+				<thead>
+					<tr>
+						<th>P</th>
+						<th>s[n+1]</th>
+						<th>Output</th>
+						<th>Phraseneintrag</th>
+						<th>Index</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="row in rows">
+						<td>{{ row.P }}</td>
+						<td>{{ row.next }}</td>
+						<td><b>{{ row.output }}</b></td>
+						<td>{{ row.entry }}</td>
+						<td>{{ row.index }}</td>
+					</tr>
+				</tbody>
+			</table>		
+		</div>
+		<script src="../js/vue.js"></script>
+		<script type="text/javascript">
+var timeoutId;
+
+var app = new Vue({
+	el: '#app',
+	data: {
+		input: 'abracadabrabaraba',
+		rows: []
+	},
+	methods: {
+		generate: function() {
+			this.rows = [];
+
+			var dictionary = [];
+
+			var prev = '';
+			var prev_match = 0;
+			for (var i = 0; i < this.input.length; ++i) {
+				var next = this.input.substr(i, 1);
+				var match = dictionary.findIndex(function(element) {
+					return element === prev + next;
+				});
+
+				console.log(match, prev + next);
+				if (match > -1) {
+					prev_match = match + 1;
+					if (i === this.input.length - 1) {
+						this.rows.push({
+							P: '☐' + prev,
+							next: next,
+							output: prev_match + ',"' + next + '"',
+							entry: '-',
+							index: '-'
+						});
+						break;
+					}
+
+					this.rows.push({
+						P: '☐' + prev,
+						next: next,
+						output: '-',
+						entry: '-',
+						index: '-'
+					});
+					prev += next;
+				} else {
+					var index = dictionary.push(prev + next);
+					// no entry in dictionary found
+					this.rows.push({
+						P: '☐' + prev,
+						next: next,
+						output: prev_match + ',"' + next + '"',
+						entry: '☐' + prev + next,
+						index: index
+					});
+
+					prev = '';
+					prev_match = 0;
+				}
+			}
+		}
+	},
+	watch: {
+		input: function(oldInput, newInput) {
+			if (timeoutId) clearTimeout(timeoutId);
+
+			timeoutId = setTimeout(this.generate, 500);
+		}
+	},
+	mounted: function() {
+		this.generate();
+	}
+});
+
+		</script>
+	</body>
+</html>

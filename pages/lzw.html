@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<title>LZW</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="../css/main.css" />
+	</head>
+	<body>
+		<h1>LZW</h1>
+		<p>Einfach einen beliebigen Text eingeben und die dazugehörige Tabelle wird automatisch generiert</p>
+		<div id="app">
+			<label>Texteingabe:</label><br>
+			<textarea maxlength="100" v-model="input"></textarea>
+			<p></p>	
+			<table>
+				<thead>
+					<tr>
+						<th>P</th>
+						<th>s[n+1]</th>
+						<th>Output</th>
+						<th>Phraseneintrag</th>
+						<th>Index</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="row in rows">
+						<td>{{ row.P }}</td>
+						<td>{{ row.next }}</td>
+						<td><b>{{ row.output }}</b></td>
+						<td>{{ row.entry }}</td>
+						<td>{{ row.index }}</td>
+					</tr>
+				</tbody>
+			</table>		
+		</div>
+		<script src="../js/vue.js"></script>
+		<script type="text/javascript">
+var timeoutId;
+
+var app = new Vue({
+	el: '#app',
+	data: {
+		input: 'this_hat_is_his_hat',
+		rows: []
+	},
+	methods: {
+		generate: function() {
+			this.rows = [];
+
+			var dictionary = [];
+
+			for (var i = 0; i < this.input.length; ++i) {
+				var character = this.input.substr(i, 1);
+				var found = dictionary.find(function(element) {
+					return element === character;
+				});
+
+				if (found) continue;
+
+				this.rows.push({
+					P: '',
+					next: '',
+					output: '-',
+					entry: character,
+					index: dictionary.push(character) - 1
+				});
+			}
+
+			var prev = this.input.substr(0, 1), next;
+			for (var i = 1; i < this.input.length + 1; ++i) {
+				if (i === this.input.length) {
+					this.rows.push({
+						P: prev,
+						next: 'Ende',
+						output: dictionary.findIndex(function(element) { return element === prev; }),
+						entry: '-',
+						index: '-'
+					});
+					break;
+				}
+				var next = this.input.substr(i, 1);
+				var match_combined = dictionary.findIndex(function(element) {
+					return element === prev + next;
+				});
+				var match_prev = dictionary.findIndex(function(element) {
+					return element === prev;
+				});
+
+				if (match_combined === -1) {
+					var index = dictionary.push(prev + next);
+					this.rows.push({
+						P: prev,
+						next: next,
+						output: match_prev,
+						entry: prev + next,
+						index: index - 1
+					});
+					prev = next;
+				} else {
+					// no entry in dictionary found
+					this.rows.push({
+						P: prev,
+						next: next,
+						output: '-',
+						entry: '-',
+						index: '-'
+					});
+
+					prev += next;
+				}
+			}
+		}
+	},
+	watch: {
+		input: function(oldInput, newInput) {
+			if (timeoutId) clearTimeout(timeoutId);
+
+			timeoutId = setTimeout(this.generate, 500);
+		}
+	},
+	mounted: function() {
+		this.generate();
+	}
+});
+
+		</script>
+	</body>
+</html>
