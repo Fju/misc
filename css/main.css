@@ -1,0 +1,17 @@
+body {
+	font-family: monospace;
+	font-size: 18px;
+}
+
+textarea {
+	min-width: 500px;
+	min-height: 200px;
+}
+
+table th {
+	padding: 0 .5em;
+}
+table td {
+	text-align: center;
+	padding: 0 .5em;
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<title>LZ 77</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="../css/main.css" />
+	</head>
+	<body>
+		<h1>LZ-77</h1>
+		<p>Einfach einen beliebigen Text eingeben und die dazugehörige Tabelle wird automatisch generiert</p>
+		<div id="app">
+			<label>Texteingabe:</label><br>
+			<textarea maxlength="100" v-model="input"></textarea>
+			<p></p>	
+			<table>
+				<thead>
+					<tr>
+						<th>Offset</th>
+						<th>Länge</th>
+						<th>nächstes Zeichen</th>
+						<th>Output</th>
+						<th style="text-align: left">Anmerkung</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="row in rows">
+						<td>{{ row.offset }}</td>
+						<td>{{ row.length }}</td>
+						<td>"{{ row.next }}"</td>
+						<td><b>({{ row.offset }}, {{ row.length }}, "{{ row.next }}")</b></td>
+						<td style="text-align: left">{{ row.note }}</td>
+					</tr>
+				</tbody>
+			</table>		
+		</div>
+		<script src="../js/vue.js"></script>
+		<script type="text/javascript">
+var timeoutId;
+
+var app = new Vue({
+	el: '#app',
+	data: {
+		input: 'this_hat_is_his_hat',
+		rows: []
+	},
+	methods: {
+		generate: function() {
+			this.rows = [];
+
+			var processed = '';
+			for (var i = 0; i < this.input.length; ++i) {
+				var window = this.input.substr(i);
+
+				var bestMatchOffset = 0;
+				var bestMatchLength = 0;
+				for (var j = 1; j < Math.min(processed.length, window.length) + 1; ++j) {
+					console.log(window.substr(0, j));
+					var k = processed.lastIndexOf(window.substr(0, j));
+					if (k > -1) {
+						bestMatchOffset = processed.length - k;
+						bestMatchLength = j;
+					}
+				}
+
+				var note = '';
+
+				if (bestMatchLength > 0) {
+					note = 'beste Entsprechung: "' + window.substr(0, bestMatchLength) + '"';
+
+				} else {
+					note = 'keine Entsprechung gefunden';
+				}
+	
+				processed += window.substr(0, bestMatchLength + 1);
+				i += bestMatchLength;
+			
+				var next = '';
+				if (bestMatchLength === window.length) next = 'Ende';
+				else next = window.substr(bestMatchLength, 1);
+
+				this.rows.push({
+					offset: bestMatchOffset,
+					length: bestMatchLength,
+					next: next,
+					note: note
+				});
+			}
+		}
+	},
+	watch: {
+		input: function(oldInput, newInput) {
+			if (timeoutId) clearTimeout(timeoutId);
+
+			timeoutId = setTimeout(this.generate, 500);
+		}
+	},
+	mounted: function() {
+		this.generate();
+	}
+});
+
+		</script>
+	</body>
+</html>
